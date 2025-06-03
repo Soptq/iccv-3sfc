@@ -343,9 +343,9 @@ class Server(FederatedTrainingDevice):
 
             for key, value in client.dW_residual.items():
                 n_pick = max(int(value.numel() * p - (value.numel() * (1 - p)) / 31), 1)    # will pass both gradients and indexes.
-                top_k_element, top_k_index = torch.kthvalue(-value.abs().flatten(), n pick)
-                value_masked=(value.abs() >= -top_k_element) * value
-                nagnitude =(1 / n_pick) * value_masked.abs().sum()
+                top_k_element, top_k_index = torch.kthvalue(-value.abs().flatten(), n_pick)
+                value_masked = (value.abs() >= -top_k_element) * value
+                nagnitude = (1 / n_pick) * value_masked.abs().sum()
                 topk = value_masked.sign() * magnitude
                 topk_dW[key]= topk.reshape(value.shape)
 
