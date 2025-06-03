@@ -189,8 +189,8 @@ class Client(FederatedTrainingDevice):
         optimizer = torch.optim.LBFGS([synthetic_inputs, synthetic_labels])
 
         best_inputs, best_labels, best_loss = synthetic_inputs.clone(), synthetic_labels.clone(), float("inf")
-        # s2 = torch.cat([v.clone().flatten() for v in self.dW_residual.values()])
-        s2 = torch.cat([v.clone().flatten() for v in self.dW.values()])
+        s2 = torch.cat([v.clone().flatten() for v in self.dW_residual.values()])
+        # s2 = torch.cat([v.clone().flatten() for v in self.dW.values()])
         for iters in range(10):
             def closure():
                 optimizer.zero_grad()
@@ -219,8 +219,8 @@ class Client(FederatedTrainingDevice):
         synthetic_gradients = torch.autograd.grad(loss, synthetic_model.parameters(), create_graph=True)
 
         synthetic_gradients_flatten = torch.cat([v.clone().flatten() for v in synthetic_gradients])
-        # real_gradients = torch.cat([v.flatten() for v in deepcopy(self.dW_residual).values()])
-        real_gradients = torch.cat([v.flatten() for v in deepcopy(self.dW).values()])
+        real_gradients = torch.cat([v.flatten() for v in deepcopy(self.dW_residual).values()])
+        # real_gradients = torch.cat([v.flatten() for v in deepcopy(self.dW).values()])
         cos = torch.sum(synthetic_gradients_flatten * real_gradients) / (
                     torch.norm(synthetic_gradients_flatten) * torch.norm(real_gradients) + 1e-12)
 
@@ -230,10 +230,10 @@ class Client(FederatedTrainingDevice):
         else:
             scale_factor = scale_factor.item()
 
-        # synthetic_gradients_dict = {name: synthetic_gradients[i] * scale_factor for i, name in
-        #                             enumerate(self.dW_residual)}
-        #
-        # subtract_(target=self.dW_residual, minuend=self.dW_residual, subtrahend=synthetic_gradients_dict)
+        synthetic_gradients_dict = {name: synthetic_gradients[i] * scale_factor for i, name in
+                                    enumerate(self.dW_residual)}
+        
+        subtract_(target=self.dW_residual, minuend=self.dW_residual, subtrahend=synthetic_gradients_dict)
         print(
             f"Client {self.id}: cos: {cos}, real norm: {torch.norm(real_gradients):.4f}, scale_factor: {scale_factor:.4f}")
 
