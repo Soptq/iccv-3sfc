@@ -343,19 +343,11 @@ class Server(FederatedTrainingDevice):
 
             for key, value in client.dW_residual.items():
                 n_pick = max(int(value.numel() * p - (value.numel() * (1 - p)) / 31), 1)    # will pass both gradients and indexes.
-                total_size += value.numel()
-                compressed_size += n_pick + (value.numel() - n_pick) / 32
-
-                topk_v, topk_i = torch.topk(torch.abs(value.flatten()), n_pick)
-                n_topk_i = torch.abs(value.flatten()) < topk_v[-1]
-                n_topk_mean = torch.mean(value.flatten()[n_topk_i])
-                print("value", key, value.numel())
-
-                topk = torch.zeros_like(value.flatten())
-                topk[topk_i] = value.flatten()[topk_i]
-                topk[n_topk_i] = torch.abs(n_topk_mean) * torch.sign(value.flatten()[n_topk_i])
-
-                topk_dW[key] = topk.reshape(value.shape)
+                top_k_element, top_k_index = torch.kthvalue(-value.abs().flatten(), n pick)
+                value_masked=(value.abs() >= -top_k_element) * value
+                nagnitude =(1 / n_pick) * value_masked.abs().sum()
+                topk = value_masked.sign() * magnitude
+                topk_dW[key]= topk.reshape(value.shape)
 
             topk_dWs.append(topk_dW)
             subtract_(target=client.dW_residual, minuend=client.dW_residual, subtrahend=topk_dWs[-1])
